@@ -52,19 +52,21 @@ import {UtilityManager} from "./UtilityManager.sol";
 contract bHermes is UtilityManager, ERC4626DepositOnly {
     using SafeTransferLib for address;
 
+    //AUDIT : Initializes the 3 tokens gauges, boost , and votes
     constructor(ERC20 _hermes, address _owner, uint32 _gaugeCycleLength, uint32 _incrementFreezeWindow)
         UtilityManager(
             address(new bHermesGauges(_owner, _gaugeCycleLength, _incrementFreezeWindow)),
             address(new bHermesBoost(_owner)),
             address(new bHermesVotes(_owner))
         )
+        //AUDIT :Created ERC4626
         ERC4626DepositOnly(_hermes, "Burned Hermes: Gov + Yield + Boost", "bHermes")
     {}
 
     /*///////////////////////////////////////////////////////////////
                             MODIFIERS
     //////////////////////////////////////////////////////////////*/
-
+    //AUDIT : So these are implemented here because its deriving from abstract contract (UtilityManager) and being used in the functions in the parent contract
     /// @dev Checks available weight allows for the call.
     modifier checkWeight(uint256 amount) override {
         if (balanceOf[msg.sender] < amount + userClaimedWeight[msg.sender]) {
@@ -92,10 +94,15 @@ contract bHermes is UtilityManager, ERC4626DepositOnly {
     /*///////////////////////////////////////////////////////////////
                             UTILITY MANAGER LOGIC
     //////////////////////////////////////////////////////////////*/
+    // AUDIT : try to break userClaimedWeight accounting... when does it change state??
+    // AUDIT : Claims all outstanding underlying bHermes utility tokens for `msg.sender`.
+    // So this just transfers tokens to msg.sender...
 
     function claimOutstanding() public virtual {
         uint256 balance = balanceOf[msg.sender];
+        // AUDIT : these functions are from utility manager...
         /// @dev Never overflows since balandeOf >= userClaimed.
+        // TODO : This can be an invariant test balanceOf(user) >= userClaimed... check if it is already tested
         claimWeight(balance - userClaimedWeight[msg.sender]);
         claimBoost(balance - userClaimedBoost[msg.sender]);
         claimGovernance(balance - userClaimedGovernance[msg.sender]);
@@ -154,6 +161,8 @@ contract bHermes is UtilityManager, ERC4626DepositOnly {
      * @param to address to transfer the tokens to
      * @param amount amounts of tokens to transfer
      */
+
+    //AUDIT test for revert... for address(0) and amount 0
 
     function transferFrom(address from, address to, uint256 amount) public virtual override returns (bool) {
         uint256 userBalance = balanceOf[from];

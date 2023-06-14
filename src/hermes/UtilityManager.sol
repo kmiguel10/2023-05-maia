@@ -13,6 +13,7 @@ import {bHermesVotes as ERC20Votes} from "./tokens/bHermesVotes.sol";
 
 import {IUtilityManager} from "./interfaces/IUtilityManager.sol";
 
+// AUDIT rhe accounting for bHermes is here.
 /// @title Utility Tokens Manager Contract
 abstract contract UtilityManager is IUtilityManager {
     using SafeTransferLib for address;
@@ -136,7 +137,7 @@ abstract contract UtilityManager is IUtilityManager {
     /*///////////////////////////////////////////////////////////////
                             MODIFIERS
     //////////////////////////////////////////////////////////////*/
-
+    // TODO AUDIT : Add a mofifier for   if (amount == 0) return;
     /// @dev Checks available weight allows for call.
     modifier checkWeight(uint256 amount) virtual;
 
